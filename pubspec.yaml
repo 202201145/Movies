@@ -31,7 +31,6 @@ dependencies:
   flutter:
     sdk: flutter
   http: ^0.13.4   # For making API requests
-  firebase_core: ^2.3.0  # Firebase core SDK
   cloud_firestore: ^4.1.0 # Firestore for movie storage
   firebase_auth: ^4.5.0   # Firebase Auth (if needed)
   url_launcher: ^6.1.7
@@ -39,7 +38,6 @@ dependencies:
   carousel_slider: ^5.0.0
   flutter_bloc: ^8.1.6
   flutter_image_slideshow: ^0.1.6
-
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
