@@ -1,10 +1,11 @@
+import 'package:movies_app/data/model/TopRated.dart';
+
 class HometabResponse {
   HometabResponse({
     this.page,
     this.results,
     this.totalPages,
     this.totalResults,
-
   });
 
   HometabResponse.fromJson(dynamic json) {
@@ -17,14 +18,12 @@ class HometabResponse {
     }
     totalPages = json['total_pages'];
     totalResults = json['total_results'];
-
-
   }
+
   int? page;
   List<Movie>? results;
   int? totalPages;
   int? totalResults;
-
 
   Map<String, dynamic> toJson() {
     final map = <String, dynamic>{};
@@ -57,38 +56,42 @@ class Movie {
     this.voteCount,
   });
 
-  Movie.fromJson(Map<String, dynamic> json) {
-    isFavorite = json['isfavorite'];
-    adult = json['adult'];
-    backdropPath = json['backdrop_path'];
-    genreIds = json['genre_ids'] != null ? json['genre_ids'].cast<int>() : [];
-    id = json['id'] ?? 0;
-    originalLanguage = json['original_language'];
-    originalTitle = json['original_title'];
-    overview = json['overview'];
-    popularity = json['popularity'];
-    posterPath = json['poster_path'];
-    releaseDate = json['release_date'];
-    title = json['title'];
-    video = json['video'];
-    voteAverage = json['vote_average'];
-    voteCount = json['vote_count'];
+  factory Movie.fromJson(Map<String, dynamic> json) {
+    return Movie(
+      isFavorite: json['isfavorite'] ?? false,
+      adult: json['adult'] ?? false,
+      backdropPath: json['backdrop_path'] ?? '',
+      genreIds:
+          json['genre_ids'] != null ? List<int>.from(json['genre_ids']) : [],
+      id: json['id'] ?? 0,
+      originalLanguage: json['original_language'] ?? '',
+      originalTitle: json['original_title'] ?? '',
+      overview: json['overview'] ?? '',
+      popularity: (json['popularity'] ?? 0).toDouble(),
+      posterPath: json['poster_path'] ?? '',
+      releaseDate: json['release_date'] ?? '',
+      title: json['title'] ?? '',
+      video: json['video'] ?? false,
+      voteAverage: (json['vote_average'] ?? 0).toDouble(),
+      voteCount: json['vote_count'] ?? 0,
+    );
   }
-  bool? adult;
-  String? backdropPath;
-  List<int>? genreIds;
-  int? id;
-  bool? isFavorite;
-  String? originalLanguage;
-  String? originalTitle;
-  String? overview;
-  double? popularity;
-  String? posterPath;
-  String? releaseDate;
-  String? title;
-  bool? video;
-  double? voteAverage;
-  int? voteCount;
+
+  final bool? adult;
+  final String? backdropPath;
+  final List<num>? genreIds;
+  final num? id;
+  final bool? isFavorite;
+  final String? originalLanguage;
+  final String? originalTitle;
+  final String? overview;
+  final num? popularity;
+  final String? posterPath;
+  final String? releaseDate;
+  final String? title;
+  final bool? video;
+  final num? voteAverage;
+  final num? voteCount;
 
   Map<String, dynamic> toJson() {
     final map = <String, dynamic>{};
@@ -108,4 +111,6 @@ class Movie {
     map['vote_count'] = voteCount;
     return map;
   }
+
+
 }

@@ -1,3 +1,5 @@
+import 'package:movies_app/data/model/hometabResponse.dart';
+
 class NewRealeases {
   NewRealeases({
     this.dates,
@@ -19,6 +21,7 @@ class NewRealeases {
     totalPages = json['total_pages'];
     totalResults = json['total_results'];
   }
+
   Dates? dates;
   int? page;
   List<Response>? results;
@@ -74,6 +77,7 @@ class Response {
     voteAverage = json['vote_average'];
     voteCount = json['vote_count'];
   }
+
   bool? adult;
   String? backdropPath;
   List<int>? genreIds;
@@ -107,6 +111,26 @@ class Response {
     map['vote_count'] = voteCount;
     return map;
   }
+
+  toMovie() {
+    return Movie(
+        isFavorite: false,
+        adult: adult,
+        backdropPath: backdropPath,
+        genreIds: genreIds,
+        id: id,
+        originalLanguage: originalLanguage,
+        originalTitle: originalTitle,
+        overview: overview,
+        popularity: popularity,
+        posterPath: posterPath,
+        releaseDate: releaseDate,
+        title: title,
+        video: video,
+        voteAverage: voteAverage,
+        voteCount: voteCount);
+  }
+
 }
 
 class Dates {
@@ -119,6 +143,7 @@ class Dates {
     maximum = json['maximum'];
     minimum = json['minimum'];
   }
+
   String? maximum;
   String? minimum;
 
@@ -128,4 +153,6 @@ class Dates {
     map['minimum'] = minimum;
     return map;
   }
+
+
 }

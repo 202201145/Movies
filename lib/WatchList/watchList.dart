@@ -1,13 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:movies_app/SharedPrefrences.dart';
+
 import '../data/api_manager.dart';
 import '../data/model/TopRated.dart';
 import '../data/model/endPoint.dart';
 import 'fireStoreServer.dart';
- // Import FirestoreService
+// Import FirestoreService
 
 class WatchlistMovieItem extends StatelessWidget {
-  final topRatedOrPopular model; // This should be a model representing the movie
-  final FirestoreService firestoreService = FirestoreService(); // Create an instance of FirestoreService
+  final TopRatedOrPopular
+  model; // This should be a model representing the movie
+  final FirestoreService firestoreService =
+  FirestoreService(); // Create an instance of FirestoreService
 
   WatchlistMovieItem({super.key, required this.model});
 
@@ -28,27 +32,40 @@ class WatchlistMovieItem extends StatelessWidget {
                     borderRadius: BorderRadius.circular(5),
                     image: DecorationImage(
                       image: NetworkImage(
-                          '${EndPoints.imageBaseURL}${model.posterPath}'), // Assuming posterPath is part of the model
+                          '${EndPoints.imageBaseURL}${model.posterPath}'),
+                      // Assuming posterPath is part of the model
                       fit: BoxFit.cover,
                     ),
                   ),
                   child: GestureDetector(
                     onTap: () async {
-                      await firestoreService.removeMovieByTitle(model.title ?? '');
+                      if (await SharedPrefs.isMovieSaved(model.toMovie())) {
+                        SharedPrefs.removeMovieFromSharedPrefs(model.toMovie());
+                      } else {
+                        SharedPrefs.saveMovieToSharedPrefs(model.toMovie());
+                      }
+                      // firestoreService.removeMovieById(model.id.toString());
+                      // await firestoreService.removeMovieByTitle(model.title ?? '');
                       // You can call setState in the parent widget to refresh the list
                     },
-                    child: Image.asset(
-                      (model.isFavorite ?? false) // Handle null values in isFavorite
-                          ? 'assets/images/Icon awesome-bookmark.png'
-                          : 'assets/images/bookmark.png',
-                    ),
+                    child: FutureBuilder(
+                      future: SharedPrefs.isMovieSaved(model.toMovie()),
+                      builder: (context, snapshot) {
+                        return Image.asset(
+                          (model.isFavorite ??
+                              false) // Handle null values in isFavorite
+                              ? 'assets/images/Icon awesome-bookmark.png'
+                              : 'assets/images/bookmark.png',
+                        );
+                      },),
                   ),
                 ),
               ),
               Expanded(
                 flex: 2,
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 10),
+                  padding:
+                  const EdgeInsets.symmetric(vertical: 8.0, horizontal: 10),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -64,17 +81,20 @@ class WatchlistMovieItem extends StatelessWidget {
                         ),
                       ),
                       Text(
-                        'Year: ${ApiManager.getMovieReleaseYear(model.releaseDate ?? '')}', // Assuming releaseDate is part of the model
+                        'Year: ${ApiManager.getMovieReleaseYear(
+                            model.releaseDate ?? '')}',
+                        // Assuming releaseDate is part of the model
                         style: const TextStyle(color: Colors.white),
                       ),
                       Row(
                         children: [
                           const ImageIcon(
-                            AssetImage("assets/images/star_rate.png"),
+                            AssetImage("Images/3.png"),
                             color: Colors.yellow,
                           ),
                           Text(
-                            "${model.voteAverage}", // Assuming voteAverage is part of the model
+                            "${model.voteAverage}",
+                            // Assuming voteAverage is part of the model
                             style: const TextStyle(color: Colors.white),
                           ),
                         ],

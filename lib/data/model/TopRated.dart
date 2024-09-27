@@ -1,3 +1,5 @@
+import 'package:movies_app/data/model/hometabResponse.dart';
+
 class TopRatedOrPopularResponse {
   TopRatedOrPopularResponse(
       {this.page,
@@ -14,14 +16,14 @@ class TopRatedOrPopularResponse {
     if (json['results'] != null) {
       results = [];
       json['results'].forEach((v) {
-        results?.add(topRatedOrPopular.fromJson(v));
+        results?.add(TopRatedOrPopular.fromJson(v));
       });
     }
     totalPages = json['total_pages'];
     totalResults = json['total_results'];
   }
   num? page;
-  List<topRatedOrPopular>? results;
+  List<TopRatedOrPopular>? results;
   num? totalPages;
   num? totalResults;
   String? message;
@@ -39,8 +41,8 @@ class TopRatedOrPopularResponse {
   }
 }
 
-class topRatedOrPopular {
-  topRatedOrPopular({
+class TopRatedOrPopular {
+  TopRatedOrPopular({
     this.adult,
     this.backdropPath,
     this.genreIds,
@@ -58,7 +60,7 @@ class topRatedOrPopular {
     this.isFavorite = false,
   });
 
-  topRatedOrPopular.fromJson(dynamic json) {
+  TopRatedOrPopular.fromJson(dynamic json) {
     adult = json['adult'];
     backdropPath = json['backdrop_path'];
     genreIds = json['genre_ids'] != null ? json['genre_ids'].cast<num>() : [];
@@ -108,4 +110,25 @@ class topRatedOrPopular {
     map['vote_count'] = voteCount;
     return map;
   }
+
+
+  toMovie() {
+    return Movie(
+        isFavorite: isFavorite,
+        adult: adult,
+        backdropPath: backdropPath,
+        genreIds: genreIds,
+        id: id,
+        originalLanguage: originalLanguage,
+        originalTitle: originalTitle,
+        overview: overview,
+        popularity: popularity,
+        posterPath: posterPath,
+        releaseDate: releaseDate,
+        title: title,
+        video: video,
+        voteAverage: voteAverage ,
+        voteCount: voteCount);
+  }
+
 }

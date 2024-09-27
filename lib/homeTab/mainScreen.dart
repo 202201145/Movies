@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_image_slideshow/flutter_image_slideshow.dart';
+import 'package:shared_preferences/shared_preferences.dart'; // استيراد SharedPreferences
 
+import '../SharedPrefrences.dart';
 import '../data/api_manager.dart';
 import '../data/model/hometabResponse.dart';
 import 'HomeContentStates.dart';
@@ -9,7 +11,6 @@ import 'HomeTabCupit.dart';
 import 'NewRelease.dart';
 import 'Recommended.dart';
 import 'movies details.dart';
-
 
 class HomeTab extends StatefulWidget {
   static const String routename = "HomeTab";
@@ -22,19 +23,39 @@ class HomeTab extends StatefulWidget {
 }
 
 class _HomeTabState extends State<HomeTab> {
-  bool isFav = false;
+  List<bool> isFavList = []; // List to hold bookmark status for each movie
 
   @override
   void initState() {
     super.initState();
     widget.viewmodel.showMovies();
+    _loadFavorites(); // Load favorites on initialization
   }
 
-  void toggleBookmark(int movieId) {
+  // Load favorite movies from SharedPreferences
+  Future<void> _loadFavorites() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
     setState(() {
-      isFav = !isFav;
+      // استرجاع حالة المفضلة من SharedPreferences
+      isFavList = List<bool>.from(
+          prefs.getStringList('favorites')?.map((e) => e == 'true') ?? []);
     });
-    // Add logic to manage favoriteMovies[movieId] toggle
+  }
+
+  // Save favorite movies to SharedPreferences
+  Future<void> _saveFavorites() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    prefs.setStringList(
+        'favorites', isFavList.map((e) => e.toString()).toList());
+  }
+
+  // Toggle bookmark status for a specific movie based on its index
+  void toggleBookmark(int index) {
+    setState(() {
+      isFavList[index] =
+          !isFavList[index]; // Toggle bookmark for this specific movie
+      _saveFavorites(); // Save the updated favorites list
+    });
   }
 
   @override
@@ -46,6 +67,13 @@ class _HomeTabState extends State<HomeTab> {
           return Center(child: Text('Error: ${state.errorMessage}'));
         } else if (state is HomeSuccessState) {
           final movies = state.response.results ?? [];
+
+          // Initialize isFavList with false for all movies
+          if (isFavList.isEmpty && movies.isNotEmpty) {
+            isFavList = List.filled(movies.length, false);
+            _saveFavorites(); // Save the initial state
+          }
+
           if (movies.isEmpty) {
             return const Center(child: Text('No movies available'));
           }
@@ -57,25 +85,26 @@ class _HomeTabState extends State<HomeTab> {
                 children: [
                   const SizedBox(height: 40),
                   movies.isNotEmpty
-                      ? Container(
-                    height: 320,
-                    child: ImageSlideshow(
-                      autoPlayInterval: 5000,
-                      isLoop: true,
-                      initialPage: 0,
-                      indicatorColor: Colors.blue,
-                      indicatorBackgroundColor: Colors.grey,
-                      children: [
-                        for (int i = 0; i < movies.length; i++)
-                          buildSlideshowItem(movies[i]),
-                      ],
-                    ),
-                  )
+                      ? SizedBox(
+                          height: 320,
+                          child: ImageSlideshow(
+                            autoPlayInterval: 5000,
+                            isLoop: true,
+                            initialPage: 0,
+                            indicatorColor: Colors.blue,
+                            indicatorBackgroundColor: Colors.grey,
+                            children: List.generate(
+                              movies.length,
+                              (index) =>
+                                  buildSlideshowItem(movies[index], index),
+                            ),
+                          ),
+                        )
                       : const Center(child: CircularProgressIndicator()),
 
-                  // Add New Releases and Recommended sections with space in between
                   buildNewReleasesWidget(),
-                  const SizedBox(height: 20), // Added space between the two sections
+                  const SizedBox(height: 20),
+                  // Added space between the two sections
                   buildRecommendedWidget(),
                 ],
               ),
@@ -88,10 +117,10 @@ class _HomeTabState extends State<HomeTab> {
     );
   }
 
-  Widget buildSlideshowItem(Movie movie) {
+  Widget buildSlideshowItem(Movie movie, int index) {
     return Stack(
       children: [
-        Container(
+        SizedBox(
           width: double.infinity,
           height: 217,
           child: Image.network(
@@ -106,7 +135,8 @@ class _HomeTabState extends State<HomeTab> {
             onPressed: () {
               // Launch movie details or trailer
             },
-            icon: const Icon(Icons.play_circle_outlined, size: 50, color: Colors.white),
+            icon: const Icon(Icons.play_circle_outlined,
+                size: 50, color: Colors.white),
           ),
         ),
         Positioned(
@@ -129,13 +159,35 @@ class _HomeTabState extends State<HomeTab> {
                     top: 1,
                     left: 1,
                     child: IconButton(
-                      onPressed: () {
-                        toggleBookmark(movie.id ?? 1);
+                      onPressed: () async {
+                        if (await SharedPrefs.isMovieSaved(movie)) {
+                          SharedPrefs.removeMovieFromSharedPrefs(movie);
+                        } else {
+                          SharedPrefs.saveMovieToSharedPrefs(movie);
+                        }
+                        setState(() {});
+
+                        // FirestoreService.addMovieToFirestore(
+                        //   id: movie.id.toString(),
+                        //   title: movie.title ?? '',
+                        //   imagePath: movie.posterPath ?? '',
+                        //   description: movie.overview ?? '',
+                        // );
+                        // toggleBookmark(
+                        //     index); // Toggle bookmark for this specific movie
                       },
-                      icon: Icon(
-                        isFav ? Icons.bookmark_added_outlined : Icons.bookmark_add_outlined,
-                        color: isFav ? Colors.yellow : Colors.white,
-                        size: 30,
+                      icon: FutureBuilder(
+                        future: SharedPrefs.isMovieSaved(movie),
+                        builder: (context, snapshot) {
+                          return Icon(
+                            snapshot.data ?? false
+                                ? Icons.bookmark_added_outlined
+                                : Icons.bookmark_add_outlined,
+                            color:
+                            snapshot.data ?? false ? Colors.yellow : Colors.white,
+                            size: 30,
+                          );
+                        },
                       ),
                     ),
                   ),
@@ -183,7 +235,8 @@ class _HomeTabState extends State<HomeTab> {
                             context,
                             MaterialPageRoute(
                               builder: (context) => MovieDetailsPage(
-                                movieId: movie.id ?? 1, // Pass the movie ID
+                                movieId:
+                                    movie.id?.toInt() ?? 0, // Pass the movie ID
                               ),
                             ),
                           );

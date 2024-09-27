@@ -1,3 +1,5 @@
+import 'package:movies_app/data/model/hometabResponse.dart';
+
 class RecommdedData {
   final int id;
   final String? title;
@@ -25,4 +27,26 @@ class RecommdedData {
       runtime: json['runtime'], // Assuming the runtime is provided in minutes
     );
   }
+
+  toMovie() {
+    return Movie(
+        isFavorite: false,
+        adult: null,
+        backdropPath: null,
+        genreIds: null,
+        id: id,
+        originalLanguage: null,
+        originalTitle: null,
+        overview: null,
+        popularity: null,
+        posterPath: posterPath,
+        releaseDate: releaseDate,
+        title: title,
+        video: null,
+        voteAverage: voteAverage,
+        voteCount: null);
+  }
+
+
+
 }
