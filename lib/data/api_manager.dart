@@ -157,4 +157,9 @@ class ApiManager {
       throw Exception('Failed to load movies by genre');
     }
   }
+
+static String getMovieReleaseYear(String data) {
+return data.split('-')[0];
+}
+
 }

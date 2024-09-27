@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:movies_app/SharedPrefrences.dart';
+import 'package:movies_app/WatchList/fireStoreServer.dart';
+import 'package:shared_preferences/shared_preferences.dart'; // استيراد SharedPreferences
 import '../data/model/NewReleases.dart';
 import 'movies details.dart';
 
@@ -19,13 +22,39 @@ class Newrealseswidget extends StatefulWidget {
 class _NewrealseswidgetState extends State<Newrealseswidget> {
   Set<int> bookmarkedMovies = {}; // Set to store bookmarked movie IDs
 
+  @override
+  void initState() {
+    super.initState();
+    // _loadBookmarkedMovies(); // Load the bookmarked movies on initialization
+  }
+
+  // Load bookmarked movies from SharedPreferences
+  Future<void> _loadBookmarkedMovies() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    setState(() {
+      bookmarkedMovies = (prefs.getStringList('bookmarkedMovies') ?? [])
+          .map((id) => int.parse(id))
+          .toSet(); // Load bookmarked movie IDs
+    });
+  }
+
+  // Save bookmarked movies to SharedPreferences
+  Future<void> _saveBookmarkedMovies() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    prefs.setStringList(
+      'bookmarkedMovies',
+      bookmarkedMovies.map((id) => id.toString()).toList(),
+    ); // Save bookmarked movie IDs
+  }
+
   void toggleBookmark(int movieId) {
     setState(() {
-      if (bookmarkedMovies.contains(movieId)) {
-        bookmarkedMovies.remove(movieId); // Remove if already bookmarked
-      } else {
-        bookmarkedMovies.add(movieId); // Add if not bookmarked
-      }
+      // if (bookmarkedMovies.contains(movieId)) {
+      //   bookmarkedMovies.remove(movieId); // Remove if already bookmarked
+      // } else {
+      //   bookmarkedMovies.add(movieId); // Add if not bookmarked
+      // }
+      // _saveBookmarkedMovies(); // Save the updated bookmarked list
     });
   }
 
@@ -46,21 +75,21 @@ class _NewrealseswidgetState extends State<Newrealseswidget> {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            SizedBox(height: 10),
+            const SizedBox(height: 10),
             Text(
               widget.title,
-              style: TextStyle(
+              style: const TextStyle(
                 color: Colors.white,
                 fontSize: 23,
                 fontWeight: FontWeight.w400,
               ),
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             SizedBox(
-              height: 180,  // Increased height for larger images
+              height: 180, // Increased height for larger images
               width: double.infinity,
               child: ListView.separated(
-                separatorBuilder: (context, index) => SizedBox(width: 25),
+                separatorBuilder: (context, index) => const SizedBox(width: 25),
                 scrollDirection: Axis.horizontal,
                 itemCount: data.length,
                 itemBuilder: (context, index) {
@@ -76,7 +105,7 @@ class _NewrealseswidgetState extends State<Newrealseswidget> {
                             context,
                             MaterialPageRoute(
                               builder: (context) =>
-                                  MovieDetailsPage(movieId: movie.id??0),
+                                  MovieDetailsPage(movieId: movie.id ?? 0),
                             ),
                           );
                         },
@@ -88,17 +117,36 @@ class _NewrealseswidgetState extends State<Newrealseswidget> {
                       ),
                       Positioned(
                         top: -12,
-                        left:-10,
+                        left: -10,
                         child: IconButton(
-                          onPressed: () {
-                            toggleBookmark(movie.id ?? 0);
+                          onPressed: () async {
+                            if (await SharedPrefs.isMovieSaved(movie.toMovie())) {
+                            SharedPrefs.removeMovieFromSharedPrefs(movie.toMovie());
+                            } else {
+                            SharedPrefs.saveMovieToSharedPrefs(movie.toMovie());
+                            }
+                            setState(() {});
+                            // FirestoreService.addMovieToFirestore(
+                            //   id: movie.id.toString(),
+                            //   title: movie.title ?? '',
+                            //   imagePath: movie.posterPath ?? '',
+                            //   description: movie.overview ?? '',
+                            // );
+                            // toggleBookmark(
+                            //     movie.id ?? 0); // Toggle bookmark status
                           },
-                          icon: Icon(
-                            isBookmarked
-                                ? Icons.bookmark_added_outlined
-                                : Icons.bookmark_add_outlined,
-                            color: isBookmarked ? Colors.yellow : Colors.white,
-                            size: 40,
+                          icon: FutureBuilder(
+                            future: SharedPrefs.isMovieSaved(movie.toMovie()),
+                            builder: (context, snapshot) {
+                              return Icon(
+                                snapshot.data ?? false
+                                    ? Icons.bookmark_added_outlined
+                                    : Icons.bookmark_add_outlined,
+                                color:
+                                snapshot.data ?? false ? Colors.yellow : Colors.white,
+                                size: 30,
+                              );
+                            },
                           ),
                         ),
                       ),

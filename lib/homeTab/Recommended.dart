@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart'; // استيراد SharedPreferences
+import 'package:movies_app/SharedPrefrences.dart';
 import 'package:movies_app/homeTab/movies%20details.dart';
+
 import '../data/model/Recommended.dart';
 
 class RecommendedMovies extends StatefulWidget {
@@ -19,14 +22,40 @@ class RecommendedMovies extends StatefulWidget {
 class _RecommendedMoviesState extends State<RecommendedMovies> {
   Set<int> bookmarkedMovies = {}; // Set to store bookmarked movie IDs
 
+  @override
+  void initState() {
+    super.initState();
+    _loadBookmarkedMovies(); // Load bookmarked movies from SharedPreferences
+  }
+
+  // Load bookmarked movies from SharedPreferences
+  Future<void> _loadBookmarkedMovies() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    setState(() {
+      bookmarkedMovies = (prefs.getStringList('bookmarkedMovies') ?? [])
+          .map((id) => int.parse(id))
+          .toSet(); // Load bookmarked movie IDs
+    });
+  }
+
+  // Save bookmarked movies to SharedPreferences
+  Future<void> _saveBookmarkedMovies() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    prefs.setStringList(
+      'bookmarkedMovies',
+      bookmarkedMovies.map((id) => id.toString()).toList(),
+    ); // Save bookmarked movie IDs
+  }
+
   // Toggles bookmark status of a movie
   void toggleBookmark(int movieId) {
     setState(() {
-      if (bookmarkedMovies.contains(movieId)) {
-        bookmarkedMovies.remove(movieId); // Remove if already bookmarked
-      } else {
-        bookmarkedMovies.add(movieId); // Add if not bookmarked
-      }
+      // if (bookmarkedMovies.contains(movieId)) {
+      //   bookmarkedMovies.remove(movieId); // Remove if already bookmarked
+      // } else {
+      //   bookmarkedMovies.add(movieId); // Add if not bookmarked
+      // }
+      // _saveBookmarkedMovies(); // Save the updated bookmarked list
     });
   }
 
@@ -47,7 +76,7 @@ class _RecommendedMoviesState extends State<RecommendedMovies> {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            SizedBox(height: 10),
+            const SizedBox(height: 10),
             Text(
               widget.title,
               style: const TextStyle(
@@ -66,7 +95,7 @@ class _RecommendedMoviesState extends State<RecommendedMovies> {
                 itemCount: data.length,
                 itemBuilder: (context, index) {
                   final movie = data[index];
-                  final isBookmarked = bookmarkedMovies.contains(movie.id);
+                  // final isBookmarked = bookmarkedMovies.contains(movie.id);
 
                   return SizedBox(
                     width: 120, // Set a fixed width to prevent overflow
@@ -82,7 +111,7 @@ class _RecommendedMoviesState extends State<RecommendedMovies> {
                                   context,
                                   MaterialPageRoute(
                                     builder: (context) =>
-                                        MovieDetailsPage(movieId: movie.id)
+                                        MovieDetailsPage(movieId: movie.id),
                                   ),
                                 );
                               },
@@ -98,22 +127,48 @@ class _RecommendedMoviesState extends State<RecommendedMovies> {
                               top: -12,
                               left: -10,
                               child: IconButton(
-                                onPressed: () {
-                                  toggleBookmark(movie.id );
+                                onPressed: () async {
+                                  if (await SharedPrefs.isMovieSaved(
+                                      movie.toMovie())) {
+                                    SharedPrefs.removeMovieFromSharedPrefs(
+                                        movie.toMovie());
+                                  } else {
+                                    SharedPrefs.saveMovieToSharedPrefs(
+                                        movie.toMovie());
+                                  }
+                                  setState(() {});
+
+                                  // FirestoreService.addMovieToFirestore(
+                                  //   id: movie.id.toString(),
+                                  //   title: movie.title ?? '',
+                                  //   imagePath: movie.posterPath ?? '',
+                                  //   description: movie.releaseDate ?? '',
+                                  // );
+
+                                  // toggleBookmark(
+                                  //     movie.id); // Toggle bookmark status
                                 },
-                                icon: Icon(
-                                  isBookmarked
-                                      ? Icons.bookmark_added_outlined
-                                      : Icons.bookmark_add_outlined,
-                                  color:
-                                  isBookmarked ? Colors.yellow : Colors.white,
-                                  size: 30,
+                                icon: FutureBuilder(
+                                  future:
+                                      SharedPrefs.isMovieSaved(movie.toMovie()),
+                                  builder: (context, snapshot) {
+                                    return Icon(
+                                      snapshot.data ?? false
+                                          ? Icons.bookmark_added_outlined
+                                          : Icons.bookmark_add_outlined,
+                                      color: snapshot.data ?? false
+                                          ? Colors.yellow
+                                          : Colors.white,
+                                      size: 30,
+                                    );
+                                  },
                                 ),
                               ),
                             ),
                           ],
                         ),
-                        const SizedBox(height: 5), // Spacing between image and text
+                        const SizedBox(height: 5),
+                        // Spacing between image and text
                         // Movie title
                         Text(
                           movie.title ?? 'N/A',
@@ -123,7 +178,8 @@ class _RecommendedMoviesState extends State<RecommendedMovies> {
                             fontWeight: FontWeight.w500,
                           ),
                           maxLines: 2,
-                          overflow: TextOverflow.ellipsis, // Ensures text wraps properly
+                          overflow: TextOverflow
+                              .ellipsis, // Ensures text wraps properly
                         ),
                         const SizedBox(height: 5),
                         // Release Year, Rating, and Runtime
@@ -137,7 +193,8 @@ class _RecommendedMoviesState extends State<RecommendedMovies> {
                               ),
                             ),
                             const SizedBox(width: 5),
-                            const Icon(Icons.star, color: Colors.amber, size: 12),
+                            const Icon(Icons.star,
+                                color: Colors.amber, size: 12),
                             Text(
                               movie.voteAverage?.toStringAsFixed(1) ?? 'N/A',
                               style: const TextStyle(
@@ -150,7 +207,8 @@ class _RecommendedMoviesState extends State<RecommendedMovies> {
                         const SizedBox(height: 5),
                         Text(
                           '${movie.runtime ?? 'N/A'} min',
-                          style: const TextStyle(color: Colors.grey, fontSize: 12),
+                          style:
+                              const TextStyle(color: Colors.grey, fontSize: 12),
                         ),
                       ],
                     ),

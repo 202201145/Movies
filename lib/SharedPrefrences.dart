@@ -12,8 +12,8 @@ class SharedPrefs {
     if (movies != null) {
       movies.add(movieJson);
       prefs.setStringList('saved_movie', movies);
-   }
     }
+  }
 
   // Load Movie object from SharedPreferences
   static Future<List<Movie>> loadMovieFromSharedPrefs() async {

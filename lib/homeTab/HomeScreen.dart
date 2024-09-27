@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:movies_app/searchScreen/search.dart';
-import 'package:movies_app/watchList.dart';
 
 import '../Browse pages/BrowserPage.dart';
+import '../WatchList/WatchListTab.dart';
 import 'mainScreen.dart';
 
 
@@ -20,7 +20,7 @@ class _HomeScreenState extends State<HomeScreen> {
     HomeTab(),
     SearchScreen(),
     BrowseScreen(),
-    WatchlistPage(),
+    WatchListTab(),
   ];
 
   void _onItemTapped(int index) {

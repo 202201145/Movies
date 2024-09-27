@@ -64,7 +64,7 @@ class DefaultFirebaseOptions {
     messagingSenderId: '318883258619',
     projectId: 'moviesapp-7e1b1',
     storageBucket: 'moviesapp-7e1b1.appspot.com',
-    iosBundleId: 'com.example.movie_app6',
+    iosBundleId: 'com.example.movies_app6',
   );
 
   static const FirebaseOptions macos = FirebaseOptions(
@@ -73,7 +73,7 @@ class DefaultFirebaseOptions {
     messagingSenderId: '318883258619',
     projectId: 'moviesapp-7e1b1',
     storageBucket: 'moviesapp-7e1b1.appspot.com',
-    iosBundleId: 'com.example.movie_app6',
+    iosBundleId: 'com.example.movies_app6',
   );
 
   static const FirebaseOptions windows = FirebaseOptions(
